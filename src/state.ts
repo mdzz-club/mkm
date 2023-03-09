@@ -20,6 +20,13 @@ export function reducer(state: any, action: any) {
     switch (action.type as string) {
         case "setKeys":
             return { ...state, keys: action.payload }
+        case "deleteKey": {
+            (state.keys as string[]).splice(
+                state.keys.indexOf(action.payload),
+                1,
+            )
+            return state
+        }
         case "manuallyConnect":
             return { ...state, preConnectMeta: action.payload }
         case "updateProfile": {

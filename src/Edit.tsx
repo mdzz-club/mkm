@@ -1,18 +1,20 @@
 import React from "react";
 import Headers from "./Headers";
 import Footer from "./Footer";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { nip19 } from "nostr-tools";
 import { loadProfile, loadRelays } from "./mkm";
 import { useEffect } from "react";
 import { ctx } from "./App"
 import { useContext } from "react";
+import localforage from "localforage";
 
 export function Element() {
     const params = useParams()
     const { state, dispatch } = useContext(ctx)
     const profile = state.profiles[params.id as string]
     const relays = state.relays[params.id as string]
+    const navigate = useNavigate()
 
     useEffect(() => {
         loadRelays(params.id as string, (res) => {
@@ -23,6 +25,16 @@ export function Element() {
             p && dispatch({ type: "updateProfile", payload: { id: params.id, data: p } })
         })
     }, [])
+
+    const delKey = async (id: string) => {
+        await localforage.removeItem("key:" + id)
+        const keys = await localforage.getItem<string[]>("keys")
+        if (!keys) return
+        keys.splice(keys.indexOf(id), 1)
+        await localforage.setItem("keys", keys)
+        dispatch({ type: "setKeys", payload: keys })
+        navigate("/")
+    }
 
     return <>
         <Headers />
@@ -49,7 +61,7 @@ export function Element() {
 
         <h2>Operations</h2>
 
-        <p><button>DELETE THIS KEY</button></p>
+        <p><button onClick={() => delKey(params.id!)}>DELETE THIS KEY</button></p>
 
         <Footer />
     </>
